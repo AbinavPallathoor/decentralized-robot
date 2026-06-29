@@ -15,7 +15,7 @@ class AStarPlanner(Node):
         
         # --- ROBOT PHYSICAL PARAMETERS ---
         # Keep the robot at least 25cm away from walls (Adjust this based on your robot's size!)
-        self.inflation_radius = 0.16 
+        self.inflation_radius = 0.20 
         
         # 1. Setup the special QoS profile required to receive saved maps
         map_qos = QoSProfile(
@@ -187,14 +187,22 @@ class AStarPlanner(Node):
             path_msg.header.stamp = self.get_clock().now().to_msg()
             path_msg.header.frame_id = 'map'
             
-            for (mx, my) in grid_path:
+            # Loop through the A* points to build the path message
+            for i, (mx, my) in enumerate(grid_path):
                 pose = PoseStamped()
                 pose.header = path_msg.header
                 wx, wy = self.grid_to_world(mx, my)
                 pose.pose.position.x = float(wx)
                 pose.pose.position.y = float(wy)
                 pose.pose.position.z = 0.0
-                pose.pose.orientation.w = 1.0 # default flat orientation
+                
+                # IMPORTANT: If this is the absolute final waypoint, give it the exact 
+                # orientation requested from the Foxglove click!
+                if i == len(grid_path) - 1:
+                    pose.pose.orientation = msg.pose.orientation
+                else:
+                    pose.pose.orientation.w = 1.0 # Intermediate points stay flat
+                    
                 path_msg.poses.append(pose)
                 
             self.path_pub.publish(path_msg)

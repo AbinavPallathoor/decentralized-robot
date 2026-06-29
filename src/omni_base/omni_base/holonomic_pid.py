@@ -51,7 +51,7 @@ class HolonomicWaypointFollower(Node):
 
         # 3. PID Tuning Parameters
         max_speed = 0.8     
-        max_rotation = 0.8   
+        max_rotation = 0.5   
         self.pid_x = PIDController(kp=0.8, ki=0.0, kd=0.2, max_output=max_speed)
         self.pid_y = PIDController(kp=0.8, ki=0.0, kd=0.2, max_output=max_speed)
         self.pid_yaw = PIDController(kp=1.0, ki=0.0, kd=0.1, max_output=max_rotation)
@@ -60,6 +60,7 @@ class HolonomicWaypointFollower(Node):
         self.waypoints = []
         self.current_wp_index = 0
         self.target_yaw = 0.0
+        self.final_goal_yaw = 0.0 # Added to track the ultimate goal orientation
         
         # Smooth cornering: Target the next point when we get within 20cm of the current one
         self.wp_tolerance = 0.20   
@@ -78,7 +79,10 @@ class HolonomicWaypointFollower(Node):
         self.current_wp_index = 0
         
         if self.waypoints:
-            self.get_logger().info(f"Received new path with {len(self.waypoints)} waypoints!")
+            # Extract the exact orientation of the final goal from the path
+            q = self.waypoints[-1].pose.orientation
+            _, _, self.final_goal_yaw = euler_from_quaternion([q.x, q.y, q.z, q.w])
+            self.get_logger().info(f"Received new path with {len(self.waypoints)} waypoints. Orienting to {math.degrees(self.final_goal_yaw):.1f} degrees!")
             
         # Reset PID integrals for fresh movement
         self.pid_x.integral = 0.0
@@ -133,10 +137,8 @@ class HolonomicWaypointFollower(Node):
                 self.current_wp_index += 1
                 return # Skip to the next loop iteration
 
-        # 6. Yaw Logic: Rotate to face the direction of the path
-        if distance_to_wp > 0.05: # Prevent erratic spinning when microscopic to a point
-            self.target_yaw = math.atan2(error_y_global, error_x_global)
-            
+        # 6. Yaw Logic: ALWAYS orient to the final goal's orientation
+        self.target_yaw = self.final_goal_yaw
         error_yaw = self.normalize_angle(self.target_yaw - current_yaw)
 
         # 7. HOLONOMIC MATH: Rotate Global Error to Local (Robot) Frame
