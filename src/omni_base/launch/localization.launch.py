@@ -33,7 +33,26 @@ def generate_launch_description():
             'base_frame_id': 'base_link',
             'odom_frame_id': 'odom',
             'global_frame_id': 'map',
-            'scan_topic': '/scan'
+            'scan_topic': '/scan',
+            'set_initial_pose': True,
+            'initial_pose.x': 0.0,
+            'initial_pose.y': 0.0,
+            'initial_pose.yaw': 0.0,
+            
+            # --- THE AMCL FIX FOR OMNI-WHEELS ---
+            'robot_model_type': 'nav2_amcl::OmniMotionModel',
+            
+            # Alpha values represent expected odometry noise.
+            # Higher = "My wheels slip a lot, trust the Lidar more."
+            'alpha1': 0.2, # Rotation noise from rotation
+            'alpha2': 0.2, # Rotation noise from translation
+            'alpha3': 0.2, # Translation noise from translation
+            'alpha4': 0.2, # Translation noise from rotation
+            'alpha5': 0.2, # Translation noise from strafing (omni specific)
+            
+            # Force AMCL to update more frequently to catch slips faster
+            'update_min_d': 0.1, # Update position every 10cm driven (default is 0.25m)
+            'update_min_a': 0.2  # Update position every ~11 degrees turned (default is 0.2 rad)
         }]
     )
 

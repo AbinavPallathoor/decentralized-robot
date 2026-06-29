@@ -25,7 +25,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'serial_bridge = omni_base.serial_bridge:main'
+            'serial_bridge = omni_base.serial_bridge:main',
+            'holonomic_pid = omni_base.holonomic_pid:main'
         ],
     },
 )
