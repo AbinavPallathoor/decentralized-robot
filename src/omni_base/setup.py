@@ -26,7 +26,8 @@ setup(
     entry_points={
         'console_scripts': [
             'serial_bridge = omni_base.serial_bridge:main',
-            'holonomic_pid = omni_base.holonomic_pid:main'
+            'holonomic_pid = omni_base.holonomic_pid:main',
+            'astar_planner = omni_base.astar_planner:main'
         ],
     },
 )
