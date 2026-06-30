@@ -1,82 +1,286 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Omni-Base README</title>
-<style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
-    h1 { border-bottom: 1px solid #eaecef; padding-bottom: 10px; color: #24292e; }
-    h2 { border-bottom: 1px solid #eaecef; padding-bottom: 10px; margin-top: 30px; color: #24292e; }
-    code { background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace; }
-    pre { background-color: #f6f8fa; padding: 16px; border-radius: 6px; overflow: auto; }
-    blockquote { border-left: 4px solid #dfe2e5; padding: 10px 20px; color: #6a737d; margin: 0; background: #fcfcfc; }
-    .emoji { font-size: 1.2em; }
-</style>
-</head>
-<body>
+# Omni-Base ROS 2 Autonomous Navigation
 
-<h1>Omni-Base ROS 2 Autonomous Navigation</h1>
+A complete, custom-built autonomous navigation stack for an **omni-directional (holonomic) robot** running **ROS 2 Humble**.
 
-<p>A complete, custom-built autonomous navigation stack for an omni-directional (holonomic) robot in ROS 2 Humble.</p>
+This project bypasses the standard **Nav2** behavior trees and local planners in favor of fully custom Python-based navigation components:
 
-<p>This project bypasses the standard Nav2 behavior trees and local planners in favor of a fully custom Python-based <strong>A* Global Planner</strong> (with obstacle inflation) and a custom <strong>Unified Holonomic Navigator</strong> (with Artificial Potential Field obstacle avoidance). It utilizes <code>slam_toolbox</code> for room mapping, <code>nav2_amcl</code> for precise localization, and OpenCV for autonomous frontier exploration.</p>
+- ⭐ **A\* Global Planner** with obstacle inflation
+- 🚗 **Unified Holonomic Navigator** with Artificial Potential Field (APF) obstacle avoidance
+- 🗺️ **slam_toolbox** for autonomous mapping
+- 📍 **nav2_amcl** for localization
+- 👁️ **OpenCV** for autonomous frontier exploration
 
-<h2>🛠️ Prerequisites & Dependencies</h2>
-<p>This project is built for <strong>ROS 2 Humble</strong> running on a Raspberry Pi (or similar SBC) interacting with an STM32 base controller.</p>
-<pre><code>sudo apt update
-sudo apt install ros-humble-slam-toolbox                  ros-humble-teleop-twist-keyboard                  ros-humble-nav2-amcl                  ros-humble-nav2-map-server                  ros-humble-nav2-lifecycle-manager                  python3-opencv</code></pre>
+---
 
-<h2>🏗️ Installation & Build</h2>
-<ol>
-    <li>Clone this package into your ROS 2 workspace (e.g., <code>~/ros2_ws/src/</code>).</li>
-    <li>Build the workspace:</li>
-</ol>
-<pre><code>cd ~/ros2_ws
+# 🛠️ Prerequisites & Dependencies
+
+This project is designed for **ROS 2 Humble** running on a **Raspberry Pi (or similar SBC)** communicating with an **STM32** base controller.
+
+Install the required ROS packages and Python dependencies:
+
+```bash
+sudo apt update
+
+sudo apt install \
+    ros-humble-slam-toolbox \
+    ros-humble-teleop-twist-keyboard \
+    ros-humble-nav2-amcl \
+    ros-humble-nav2-map-server \
+    ros-humble-nav2-lifecycle-manager \
+    python3-opencv
+```
+
+---
+
+# 🏗️ Installation & Build
+
+Clone this package into your ROS 2 workspace (for example `~/ros2_ws/src/`).
+
+Build the workspace:
+
+```bash
+cd ~/ros2_ws
+
 colcon build --packages-select omni_base
-source install/setup.bash</code></pre>
 
-<h2>🗺️ Phase 1: Fully Autonomous Mapping</h2>
-<p>You can let the robot completely map a room on its own using the Frontier Explorer.</p>
-<ul>
-    <li><strong>Launch the Autonomous Mapping Stack:</strong>
-        <pre><code>ros2 launch omni_base autonomous_mapping.launch.py</code></pre>
-    </li>
-    <li><strong>Save the Map:</strong> (Do not close the launch file until saved!)
-        <pre><code>ros2 run nav2_map_server map_saver_cli -f ~/my_map</code></pre>
-    </li>
-</ul>
+source install/setup.bash
+```
 
-<h2>🚀 Phase 2: Manual Waypoint Navigation</h2>
-<h3>1. Launch Localization (AMCL)</h3>
-<pre><code>ros2 launch omni_base localization.launch.py</code></pre>
-<blockquote><strong>Note:</strong> Open Foxglove Studio, use the <em>Publish 2D pose estimate</em> (/initialpose) tool, and click on the map to initialize AMCL.</blockquote>
+---
 
-<h3>2. Run the Custom A* Planner</h3>
-<pre><code>ros2 run omni_base astar_planner</code></pre>
+# 🗺️ Phase 1 — Fully Autonomous Mapping
 
-<h3>3. Run the Unified Holonomic Navigator</h3>
-<pre><code>ros2 run omni_base holonomic_navigator</code></pre>
+The robot can completely map an unknown room using the built-in **Frontier Explorer**.
 
-<h2>🎮 Interacting via Foxglove Studio</h2>
-<ul>
-    <li><strong>Set Initial Location:</strong> Use the <em>Publish 2D pose estimate</em> tool on the <code>/initialpose</code> topic.</li>
-    <li><strong>Send a Navigation Goal:</strong> Use the <em>Publish 2D pose</em> tool on the <code>/move_base_simple/goal</code> topic.</li>
-    <li><strong>Visualize the Path:</strong> Subscribe to the <code>/astar_rigid_path</code> topic to see the route in real-time.</li>
-</ul>
+## Launch the Autonomous Mapping Stack
 
-<h2>⚙️ Customization & Tuning</h2>
-<ul>
-    <li><strong>Obstacle Inflation:</strong> Edit <code>self.inflation_radius</code> in <code>astar_planner.py</code>.</li>
-    <li><strong>Holonomic Navigator Tuning:</strong> Open <code>holonomic_navigator.py</code> to adjust:
-        <ul>
-            <li><code>max_speed</code> / <code>max_yaw_rate</code>: Robot speed limits.</li>
-            <li><code>lookahead_dist</code>: Path smoothing.</li>
-            <li><code>accel_alpha</code>: Low-pass filter for acceleration.</li>
-            <li><code>danger_radius</code>: Obstacle avoidance sensitivity.</li>
-        </ul>
-    </li>
-    <li><strong>AMCL Omni-Model:</strong> Adjust <code>alpha1</code> through <code>alpha5</code> in <code>localization.launch.py</code> to tune sensor trust.</li>
-</ul>
+This launch file starts:
 
-</body>
-</html>
+- Robot hardware
+- LiDAR
+- EKF
+- Motor controller
+- `slam_toolbox`
+- Custom A* planner
+- Holonomic navigator
+- Frontier explorer
+
+```bash
+ros2 launch omni_base autonomous_mapping.launch.py
+```
+
+The robot will:
+
+- Discover unexplored frontiers
+- Navigate through doorways
+- Avoid obstacles dynamically
+- Build a complete occupancy map
+
+---
+
+## Save the Map
+
+Once the map is complete and looks clean, **save it before shutting down the mapping launch file**.
+
+```bash
+ros2 run nav2_map_server map_saver_cli -f ~/my_map
+```
+
+This creates:
+
+```
+~/my_map.yaml
+~/my_map.pgm
+```
+
+---
+
+# 🚀 Phase 2 — Manual Waypoint Navigation
+
+After saving a map, switch to localization mode for waypoint navigation.
+
+---
+
+## 1. Launch Localization (AMCL)
+
+Loads the saved map and starts localization.
+
+```bash
+ros2 launch omni_base localization.launch.py
+```
+
+> **Note**
+>
+> Open **Foxglove Studio** and use **Publish 2D Pose Estimate** on the `/initialpose` topic to initialize the robot's pose.
+
+---
+
+## 2. Run the Custom A* Planner
+
+Open a new terminal:
+
+```bash
+ros2 run omni_base astar_planner
+```
+
+The planner:
+
+- Loads the occupancy map
+- Inflates obstacles
+- Waits for navigation goals
+- Generates collision-free paths
+
+---
+
+## 3. Run the Unified Holonomic Navigator
+
+Open another terminal:
+
+```bash
+ros2 run omni_base holonomic_navigator
+```
+
+The navigator:
+
+- Executes A* paths
+- Strafes using omni wheels
+- Avoids dynamic obstacles with APF
+- Rotates and translates simultaneously
+
+---
+
+# 🎮 Using Foxglove Studio
+
+The navigation stack is designed for **Foxglove Studio**.
+
+## Set Initial Position
+
+Publish a **2D Pose Estimate** on:
+
+```
+/initialpose
+```
+
+---
+
+## Send a Navigation Goal
+
+Publish a **2D Pose** on:
+
+```
+/move_base_simple/goal
+```
+
+Click anywhere on the map to command the robot.
+
+---
+
+## Visualize the Planned Path
+
+Add a **Path** layer in the 3D panel and subscribe to:
+
+```
+/astar_rigid_path
+```
+
+This displays the A* planner output in real time.
+
+---
+
+# ⚙️ Customization & Tuning
+
+## A* Planner
+
+Edit:
+
+```
+astar_planner.py
+```
+
+Parameter:
+
+```python
+self.inflation_radius
+```
+
+Adjusts how far the global planner stays away from obstacles and walls.
+
+---
+
+## Holonomic Navigator
+
+Edit:
+
+```
+holonomic_navigator.py
+```
+
+### Speed Limits
+
+```python
+max_speed
+max_yaw_rate
+```
+
+Maximum translational and rotational velocity.
+
+### Path Following
+
+```python
+lookahead_dist
+```
+
+- Larger → smoother paths
+- Smaller → follows the A* path more tightly
+
+### Acceleration Filtering
+
+```python
+accel_alpha
+```
+
+Controls the low-pass filter.
+
+- Lower values = smoother acceleration
+- Helps prevent wheel slip
+
+### Obstacle Avoidance
+
+```python
+danger_radius
+emergency_stop_radius
+```
+
+Defines when the robot:
+
+- Begins sliding around obstacles
+- Performs an emergency stop
+
+---
+
+## AMCL Omni Motion Model
+
+The provided `localization.launch.py` uses:
+
+```
+nav2_amcl::OmniMotionModel
+```
+
+If wheel slip varies across different floor surfaces, tune the following parameters:
+
+```text
+alpha1
+alpha2
+alpha3
+alpha4
+alpha5
+```
+
+These determine how much AMCL trusts:
+
+- Wheel odometry
+- LiDAR observations
+
+to achieve more accurate localization.
+
+---
