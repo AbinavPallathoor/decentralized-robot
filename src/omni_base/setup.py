@@ -27,7 +27,10 @@ setup(
         'console_scripts': [
             'serial_bridge = omni_base.serial_bridge:main',
             'holonomic_pid = omni_base.holonomic_pid:main',
-            'astar_planner = omni_base.astar_planner:main'
+            'astar_planner = omni_base.astar_planner:main',
+            'frontier_explorer = omni_base.frontier_explorer:main',
+            'local_planner = omni_base.local_planner:main',
+            'holonomic_navigator = omni_base.holonomic_navigator:main'
         ],
     },
 )

@@ -44,14 +44,15 @@ class HolonomicWaypointFollower(Node):
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
         # 2. Setup Publishers and Subscribers
-        self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
+        # Publish to /cmd_vel_nav so the Local Planner can intercept it
+        self.cmd_pub = self.create_publisher(Twist, '/cmd_vel_nav', 10)
         
         # Subscribe to the A* Path instead of a single goal
         self.path_sub = self.create_subscription(Path, '/astar_rigid_path', self.path_callback, 10)
 
         # 3. PID Tuning Parameters
-        max_speed = 0.8     
-        max_rotation = 0.5   
+        max_speed = 1.2     
+        max_rotation = 0.8   
         self.pid_x = PIDController(kp=0.8, ki=0.0, kd=0.2, max_output=max_speed)
         self.pid_y = PIDController(kp=0.8, ki=0.0, kd=0.2, max_output=max_speed)
         self.pid_yaw = PIDController(kp=1.0, ki=0.0, kd=0.1, max_output=max_rotation)
@@ -63,7 +64,7 @@ class HolonomicWaypointFollower(Node):
         self.final_goal_yaw = 0.0 # Added to track the ultimate goal orientation
         
         # Smooth cornering: Target the next point when we get within 20cm of the current one
-        self.wp_tolerance = 0.20   
+        self.wp_tolerance = 0.15   
         # Final stop: Stop exactly on the final destination dot
         self.final_tolerance = 0.05 
 
@@ -170,3 +171,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
