@@ -39,7 +39,7 @@ class HolonomicNavigator(Node):
         self.curr_vth = 0.0
 
         # --- PATH FOLLOWING TUNING ---
-        self.max_speed = 0.25       
+        self.max_speed = 0.3       
         self.max_yaw_rate = 0.40    
         self.yaw_kp = 2.0           
         
